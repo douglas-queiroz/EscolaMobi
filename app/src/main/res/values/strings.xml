@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">Escola</string>
+
+    <string name="hello_world">Olá mundo!</string>
+    <string name="action_settings">Configurações</string>
+    <string name="title_activity_login">Login</string>
+    <string name="login">Login</string>
+    <string name="access">Acessar</string>
+    <string name="cpf">CPF</string>
+    <string name="birth_day">Dt Nascimento (dd/mm/AAAA)</string>
+    <string name="title_activity_list_message">Lista de mensagens</string>
+    <string name="title_activity_message">Mensagem</string>
+</resources>
