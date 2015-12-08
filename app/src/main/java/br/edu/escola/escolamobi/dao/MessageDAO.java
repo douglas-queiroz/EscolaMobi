@@ -7,7 +7,6 @@ import android.database.Cursor;
 import java.util.ArrayList;
 import java.util.List;
 
-import br.edu.escola.escolamobi.helper.EscolaDbHelper;
 import br.edu.escola.escolamobi.model.Message;
 
 /**
@@ -24,8 +23,7 @@ public class MessageDAO extends AbstractDAO<Message> {
         values.put(Message.COLUMN_TITLE, object.getTitle());
         values.put(Message.COLUMN_MESSAGE, object.getMessage());
         values.put(Message.COLUMN_ID_SERVER, object.getIdService());
-        values.put(Message.COLUMN_STUDENT, object.getStudent());
-        values.put(Message.COLUMN_STATUS, object.getStatus().getIndex());
+        values.put(Message.COLUMN_DESTINATION, object.getDestination());
         values.put(Message.COLUMN_UPDATED_AT, object.getUpdatedAt());
 
         return values;
@@ -49,11 +47,8 @@ public class MessageDAO extends AbstractDAO<Message> {
         column_id = cursor.getColumnIndex(Message.COLUMN_ID_SERVER);
         message.setIdService(cursor.getInt(column_id));
 
-        column_id = cursor.getColumnIndex(Message.COLUMN_STUDENT);
-        message.setStudent(cursor.getString(column_id));
-
-        column_id = cursor.getColumnIndex(Message.COLUMN_STATUS);
-        message.setStatus(Message.Status.values()[cursor.getInt(column_id)]);
+        column_id = cursor.getColumnIndex(Message.COLUMN_DESTINATION);
+        message.setDestination(cursor.getString(column_id));
 
         column_id = cursor.getColumnIndex(Message.COLUMN_UPDATED_AT);
         message.setUpdatedAt(cursor.getString(column_id));
@@ -72,8 +67,7 @@ public class MessageDAO extends AbstractDAO<Message> {
                 Message.COLUMN_TITLE,
                 Message.COLUMN_MESSAGE,
                 Message.COLUMN_ID_SERVER,
-                Message.COLUMN_STUDENT,
-                Message.COLUMN_STATUS,
+                Message.COLUMN_DESTINATION,
                 Message.COLUMN_UPDATED_AT};
 
         return columns;
@@ -89,25 +83,5 @@ public class MessageDAO extends AbstractDAO<Message> {
         curso.close();
 
         return message;
-    }
-
-    public List<Message> getReady() {
-        String selection = Message.COLUMN_STATUS + " = ?";
-        String[] selectionArgs = { String.valueOf(Message.Status.READY.getIndex()) };
-        Cursor curso = db.query(Message.TABLE, getColumns(), selection, selectionArgs, null, null, null);
-        curso.moveToFirst();
-
-        List<Message> objectLis = new ArrayList<Message>();
-
-        if (curso.moveToFirst()) {
-            do {
-                Message object = convertToObject(curso);
-                objectLis.add(object);
-            } while (curso.moveToNext());
-        }
-
-        curso.close();
-
-        return objectLis;
     }
 }

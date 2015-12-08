@@ -13,11 +13,10 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal">
         <EditText
-            android:id="@+id/edt_login_cpf"
+            android:id="@+id/edt_login_username"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
-            android:hint="@string/cpf"
-            android:inputType="number"/>
+            android:hint="@string/user"/>
     </LinearLayout>
 
     <LinearLayout
@@ -25,11 +24,11 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal">
         <EditText
-            android:id="@+id/edt_login_birth_day"
+            android:id="@+id/edt_login_password"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
-            android:hint="@string/birth_day"
-            android:inputType="number"/>
+            android:hint="@string/password"
+            android:inputType="textPassword"/>
     </LinearLayout>
     <LinearLayout
         android:layout_width="fill_parent"

@@ -5,6 +5,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.widget.Toast;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
@@ -18,6 +19,7 @@ import java.util.List;
 
 import br.edu.escola.escolamobi.dao.AbstractDAO;
 import br.edu.escola.escolamobi.dao.MessageDAO;
+import br.edu.escola.escolamobi.interfaces.MessageHandler;
 import br.edu.escola.escolamobi.model.Message;
 import br.edu.escola.escolamobi.util.HttpUtil;
 
@@ -43,48 +45,56 @@ public class MessageServce extends AbstractService<Message> {
         return dao.getLast();
     }
 
-    public void updateOnService(Activity ctx){
-        if(HttpUtil.isConnected(ctx)) {
-            final List<Message> messages = dao.getReady();
-            if (messages.isEmpty()){
-                return;
+    public void getMessagesOnServer(Context ctx, int userId, final MessageHandler handler){
+        if(HttpUtil.isConnected(ctx)){
+            Message lastMessage = this.getLast();
+            int lastId = 0;
+            if (lastMessage != null){
+                lastId = lastMessage.getIdService();
             }
-            String ids = "[";
-            for (int i = 0; i < messages.size(); i++) {
-                ids += messages.get(i).getIdService();
-                if (i + 1 < messages.size())
-                    ids += ",";
-            }
-            ids += "]";
-
-            final List<NameValuePair> params = new ArrayList<NameValuePair>();
-            params.add(new BasicNameValuePair("ids", ids));
 
             new AsyncTask<String, Void, String>() {
                 @Override
                 protected String doInBackground(String... urls) {
 
-                    return HttpUtil.POST(urls[0], params);
+                    return HttpUtil.GET(urls[0]);
                 }
 
+                // onPostExecute displays the results of theAsyncTask.
                 @Override
                 protected void onPostExecute(String result) {
                     try {
-                        JSONObject object = new JSONObject(result);
-                        if (object.getString("status").equals("ok")) {
-                            for (int i = 0; i < messages.size(); i++) {
-                                Message message = messages.get(i);
-                                message.setStatus(Message.Status.UPDATED);
-                                save(message);
+                        JSONArray jArray = new JSONArray(result);
+                        for(int i = 0; i < jArray.length(); i++){
+                            JSONObject jObject = jArray.getJSONObject(i);
+                            Message message = new Message();
+                            message.setIdService(jObject.getInt("id"));
+                            message.setTitle(jObject.getString("title"));
+                            message.setMessage(jObject.getString("message"));
+                            message.setIdService(jObject.getInt("id"));
+
+                            if (!jObject.isNull("student")){
+                                JSONObject jStudent = jObject.getJSONObject("student");
+                                message.setDestination(jStudent.getString("name"));
+                            }else{
+                                JSONObject jStudent = jObject.getJSONObject("students_class");
+                                message.setDestination(jStudent.getString("name"));
                             }
+
+                            dao.insert(message);
                         }
 
 
                     } catch (JSONException e) {
-                        Log.e("DOUGLAS", "Erro no parsing do JSON", e);
+                        Log.e("DOUGLAS", e.getMessage());
+                        handler.onJsonError();
+                    }finally {
+                        handler.onFinish();
                     }
                 }
-            }.execute(HttpUtil.SERVER + "/check");
+            }.execute(HttpUtil.SERVER+"/get_messages.json?user_id="+userId+"&last_id="+lastId);
+        }else{
+            handler.withoutInternet();
         }
     }
 }

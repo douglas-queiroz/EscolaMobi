@@ -41,8 +41,6 @@ public class ListMessageActivity extends ActionBarActivity implements AdapterVie
     private void loadList(List<Message> messages){
         messageApater = new MessageApater(this, messages);
         ((AdapterView<ListAdapter>) lvMessages).setAdapter(messageApater);
-
-        servce.updateOnService(this);
     }
 
     @Override

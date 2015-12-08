@@ -42,9 +42,6 @@ public class MessageApater extends ArrayAdapter<Message> {
 
             if (txtTile != null) {
                 txtTile.setText(m.getTitle());
-                if(m.getStatus() == Message.Status.NOT_READY){
-                    txtTile.setTypeface(Typeface.DEFAULT_BOLD);
-                }
             }
 
             if (txtMessage != null) {

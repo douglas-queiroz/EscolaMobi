@@ -30,24 +30,24 @@ import org.json.JSONObject;
 import java.io.IOException;
 
 import br.edu.escola.escolamobi.R;
+import br.edu.escola.escolamobi.interfaces.MessageHandler;
 import br.edu.escola.escolamobi.model.Message;
 import br.edu.escola.escolamobi.model.User;
 import br.edu.escola.escolamobi.service.MessageServce;
 import br.edu.escola.escolamobi.util.HttpUtil;
-import br.edu.escola.escolamobi.util.Mask;
 
 
 public class LoginActivity extends ActionBarActivity {
 
-    private String SENDER_ID = "980552783328";
+    private String SENDER_ID = "55062672796";
     private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
     static final String TAG = "MEUFILHO";
 
     private MessageServce service;
     private SharedPreferences prefs;
 
-    private EditText edtCpf;
-    private EditText edtBirthDay;
+    private EditText edtUsername;
+    private EditText edtPassword;
     private TextView txtErrorMsg;
     private Button btnAccess;
     private String regId;
@@ -68,11 +68,8 @@ public class LoginActivity extends ActionBarActivity {
     }
 
     private void loadComponents(){
-        edtCpf = (EditText) findViewById(R.id.edt_login_cpf);
-        edtCpf.addTextChangedListener(Mask.insert("###.###.###-##", edtCpf));
-
-        edtBirthDay = (EditText) findViewById(R.id.edt_login_birth_day);
-        edtBirthDay.addTextChangedListener(Mask.insert("##/##/####", edtBirthDay));
+        edtUsername = (EditText) findViewById(R.id.edt_login_username);
+        edtPassword = (EditText) findViewById(R.id.edt_login_password);
 
         btnAccess = (Button) findViewById(R.id.btn_login_access);
         txtErrorMsg = (TextView) findViewById(R.id.txt_error_msg);
@@ -80,13 +77,10 @@ public class LoginActivity extends ActionBarActivity {
             @Override
             public void onClick(View v) {
                 final ProgressDialog dialog = ProgressDialog.show(((Activity) context), "",
-                        "Loading. Please wait...", true);
+                        "Por favor, aguarde...", true);
 
-                String cpf = edtCpf.getText().toString().replace(".", "").replace("-", "");
-                String[] arrayBirth = edtBirthDay.getText().toString().split("/");
-                String birth = arrayBirth[2] + "-" + arrayBirth[1] + "-" + arrayBirth[0];
-
-                Log.i("TAG", "CPF = " + cpf + " DATA = " + birth);
+                String username = edtUsername.getText().toString();
+                String password = edtPassword.getText().toString();
 
                 new AsyncTask<String, Void, String>() {
                     @Override
@@ -101,7 +95,7 @@ public class LoginActivity extends ActionBarActivity {
                         dialog.dismiss();
 
                         if (result.equals("null")) {
-                            txtErrorMsg.setText("CPF ou data de nascimento incorreto!");
+                            txtErrorMsg.setText("Usuário ou senha incorreto!");
                             txtErrorMsg.setVisibility(View.VISIBLE);
                             return;
                         }
@@ -109,13 +103,12 @@ public class LoginActivity extends ActionBarActivity {
                             JSONObject userJson = new JSONObject(result);
                             int id = userJson.getInt(User.ID_KEY);
                             String name = userJson.getString(User.NAME_KEY);
-                            String cpf = userJson.getString(User.CPF_KEY);
-                            String regId = userJson.getString(User.REG_ID);
+                            String login = userJson.getString(User.LOGIN_KEY);
 
                             SharedPreferences.Editor editor = prefs.edit();
                             editor.putInt(User.ID_KEY, id);
                             editor.putString(User.NAME_KEY, name);
-                            editor.putString(User.CPF_KEY, cpf);
+                            editor.putString(User.LOGIN_KEY, login);
                             editor.commit();
 
                             getMessagesOnServer(id);
@@ -124,7 +117,7 @@ public class LoginActivity extends ActionBarActivity {
                             Log.e("DOUGLAS", "Erro no parsing do JSON", e);
                         }
                     }
-                }.execute(HttpUtil.SERVER + "/login_parent.json?login=" + cpf + "&senha=" + birth + "&registration_id=" + regId);
+                }.execute(HttpUtil.SERVER + "/login_parent?login=" + username + "&password=" + password + "&reg_id=" + regId);
             }
         });
     }
@@ -217,61 +210,32 @@ public class LoginActivity extends ActionBarActivity {
     }
 
     private void getMessagesOnServer(int userId){
-        if(HttpUtil.isConnected(this)){
-            final ProgressDialog dialog = ProgressDialog.show(this, "",
-                    "Loading. Please wait...", true);
+        final ProgressDialog dialog = ProgressDialog.show(context, "",
+                "Aguarde, carregando...", true);
+        service.getMessagesOnServer(this, userId, new MessageHandler() {
 
-            Message lastMessage = service.getLast();
-            String lastMessageDate = "1980-01-01T00:00:00.072Z";
-            if (lastMessage != null){
-                lastMessageDate = lastMessage.getUpdatedAt();
+            @Override
+            public void onFinish() {
+                dialog.dismiss();
+                callListActivity();
             }
 
-            new AsyncTask<String, Void, String>() {
-                @Override
-                protected String doInBackground(String... urls) {
+            @Override
+            public void onJsonError() {
+                Toast toast = new Toast(context);
+                toast.setDuration(Toast.LENGTH_LONG);
+                toast.setText("Ocorreu um erro de comunicação!");
+                callListActivity();
+            }
 
-                    return HttpUtil.GET(urls[0]);
-                }
-
-                // onPostExecute displays the results of theAsyncTask.
-                @Override
-                protected void onPostExecute(String result) {
-                    try {
-                        JSONArray jArray = new JSONArray(result);
-                        for(int i = 0; i < jArray.length(); i++){
-                            JSONObject jObject = jArray.getJSONObject(i);
-                            Message message = new Message();
-                            message.setIdService(jObject.getInt("id"));
-                            message.setTitle(jObject.getString("title"));
-                            message.setMessage(jObject.getString("message"));
-                            if (jObject.getString("status").equals("0")) {
-                                message.setStatus(Message.Status.NOT_READY);
-                            }else{
-                                message.setStatus(Message.Status.UPDATED);
-                            }
-                            message.setUpdatedAt(jObject.getString("created_at"));
-                            JSONObject jStudent = jObject.getJSONObject("student");
-                            message.setStudent(jStudent.getString("name"));
-
-                            service.save(message);
-                        }
-
-
-                    } catch (JSONException e) {
-                        Log.e("DOUGLAS", "Erro no parsing do JSON", e);
-                    }finally {
-                        dialog.dismiss();
-                        callListActivity();
-                    }
-                }
-            }.execute(HttpUtil.SERVER+"/notifications.json?parent_id="+userId+"&created_at="+lastMessageDate);
-        }else{
-            Toast toast = new Toast(this);
-            toast.setDuration(Toast.LENGTH_LONG);
-            toast.setText("Não foi possível conectar ao servidor!");
-            callListActivity();
-        }
+            @Override
+            public void withoutInternet() {
+                dialog.dismiss();
+                Toast toast = Toast.makeText(context, "Não foi possível conectar ao servidor!",Toast.LENGTH_LONG);
+                toast.show();
+                callListActivity();
+            }
+        });
     }
 
     private void callListActivity(){

@@ -26,7 +26,7 @@ import java.util.List;
  * Created by douglasqueiroz on 6/13/15.
  */
 public class HttpUtil {
-    public static String SERVER = "https://secret-reef-1475.herokuapp.com";
+    public static String SERVER = "https://radiant-chamber-1342.herokuapp.com/";
 
     public static boolean isConnected(Context ctx){
         ConnectivityManager connMgr = (ConnectivityManager) ctx.getSystemService(Activity.CONNECTIVITY_SERVICE);

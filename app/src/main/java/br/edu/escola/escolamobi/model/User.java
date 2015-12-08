@@ -7,29 +7,20 @@ import java.util.Date;
  */
 public class User {
     public static final String ID_KEY = "id";
-    public static final String CPF_KEY = "cpf";
+    public static final String LOGIN_KEY = "login";
     public static final String NAME_KEY = "name";
     public static final String REG_ID = "registration_id";
     public static final String VERSION = "version";
 
-    private String cpf;
-    private Date birth;
+    private String login;
     private String name;
 
-    public String getCpf() {
-        return cpf;
+    public String getLogin() {
+        return login;
     }
 
-    public void setCpf(String cpf) {
-        this.cpf = cpf;
-    }
-
-    public Date getBirth() {
-        return birth;
-    }
-
-    public void setBirth(Date birth) {
-        this.birth = birth;
+    public void setLogin(String login) {
+        this.login = login;
     }
 
     public String getName() {
